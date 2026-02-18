@@ -11,7 +11,7 @@
     "vue",
     "vanilla"
   ],
-  "author": "",
+  "author": "Nodirbek Xushbaxtov",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
