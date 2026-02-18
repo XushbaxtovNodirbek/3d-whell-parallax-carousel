@@ -21,9 +21,29 @@ const carousel = new ParallaxCarousel("#my-container", [
   '<div style="color:white">Card 1</div>',
   '<div style="color:white">Card 2</div>',
   '<div style="color:white">Card 3</div>',
-  '<div style="color:white">Card 4</div>',
-  '<div style="color:white">Card 5</div>',
 ]);
+```
+
+### With renderItem callback
+
+```js
+import { ParallaxCarousel } from "3d-whell-parallax-carousel";
+
+const products = [
+  { id: 1, name: "Product 1", image: "/img1.jpg" },
+  { id: 2, name: "Product 2", image: "/img2.jpg" },
+  { id: 3, name: "Product 3", image: "/img3.jpg" },
+];
+
+const carousel = new ParallaxCarousel("#my-container", products, {
+  renderItem: ({ item, index }) => `
+    <div style="text-align: center; padding: 20px;">
+      <img src="${item.image}" alt="${item.name}" style="width: 100%; border-radius: 4px;" />
+      <h3 style="margin-top: 10px; color: white;">${item.name}</h3>
+      <p style="color: rgba(255,255,255,0.6);">Index: ${index}</p>
+    </div>
+  `,
+});
 ```
 
 ### TypeScript
@@ -31,16 +51,29 @@ const carousel = new ParallaxCarousel("#my-container", [
 ```ts
 import { ParallaxCarousel, type ParallaxCarouselOptions } from "3d-whell-parallax-carousel";
 
-const options: ParallaxCarouselOptions = {
+interface Product {
+  id: number;
+  name: string;
+  image: string;
+}
+
+const products: Product[] = [
+  { id: 1, name: "Product 1", image: "/img1.jpg" },
+  { id: 2, name: "Product 2", image: "/img2.jpg" },
+];
+
+const options: ParallaxCarouselOptions<Product> = {
   autoplay: true,
   interval: 3000,
-  background: "#222",
+  renderItem: ({ item }) => `
+    <div>
+      <img src="${item.image}" alt="${item.name}" />
+      <h3>${item.name}</h3>
+    </div>
+  `,
 };
 
-const carousel = new ParallaxCarousel("#my-container", [
-  '<div>Card 1</div>',
-  '<div>Card 2</div>',
-], options);
+const carousel = new ParallaxCarousel<Product>("#my-container", products, options);
 
 // Type-safe event handling
 carousel.container.addEventListener("change", (e: CustomEvent) => {
@@ -73,6 +106,39 @@ function App() {
 }
 ```
 
+### React with renderItem
+
+```jsx
+import { ParallaxCarouselReact } from "3d-whell-parallax-carousel/react";
+
+const products = [
+  { id: 1, name: "Product 1", image: "/img1.jpg" },
+  { id: 2, name: "Product 2", image: "/img2.jpg" },
+];
+
+function App() {
+  const ref = useRef(null);
+
+  return (
+    <ParallaxCarouselReact
+      ref={ref}
+      items={products}
+      options={{
+        autoplay: true,
+        renderItem: ({ item, index }) => `
+          <div style="padding: 20px;">
+            <img src="${item.image}" alt="${item.name}" />
+            <h3>${item.name}</h3>
+            <p>Index: ${index}</p>
+          </div>
+        `,
+      }}
+      onChange={({ index }) => console.log("Slide:", index)}
+    />
+  );
+}
+```
+
 ### React with TypeScript
 
 ```tsx
@@ -83,9 +149,15 @@ import {
   type ParallaxCarouselReactProps,
 } from "3d-whell-parallax-carousel/react";
 
-const items: ParallaxCarouselReactProps["items"] = [
-  "<div>Card 1</div>",
-  "<div>Card 2</div>",
+interface Product {
+  id: number;
+  name: string;
+  image: string;
+}
+
+const items: Product[] = [
+  { id: 1, name: "Product 1", image: "/img1.jpg" },
+  { id: 2, name: "Product 2", image: "/img2.jpg" },
 ];
 
 function App() {
@@ -97,10 +169,18 @@ function App() {
 
   return (
     <>
-      <ParallaxCarouselReact
+      <ParallaxCarouselReact<Product>
         ref={carouselRef}
         items={items}
-        options={{ autoplay: true, interval: 3000 }}
+        options={{
+          autoplay: true,
+          renderItem: ({ item }) => (
+            `<div>
+              <img src="${item.image}" alt="${item.name}" />
+              <h3>${item.name}</h3>
+            </div>`
+          ),
+        }}
         onChange={handleChange}
       />
       <button onClick={() => carouselRef.current?.next()}>Next</button>
@@ -131,14 +211,47 @@ const onSlideChange = ({ index, total }) => console.log(index, total);
 </script>
 ```
 
+### Vue 3 with renderItem
+
+```vue
+<template>
+  <ParallaxCarousel
+    ref="carousel"
+    :items="products"
+    :options="{
+      autoplay: true,
+      renderItem: ({ item, index }) => `
+        <div style='padding: 20px;'>
+          <img src='${item.image}' alt='${item.name}' />
+          <h3>${item.name}</h3>
+          <p>Index: ${index}</p>
+        </div>
+      `,
+    }"
+    @change="onSlideChange"
+  />
+</template>
+
+<script setup>
+import { ParallaxCarouselVue as ParallaxCarousel } from "3d-whell-parallax-carousel/vue";
+
+const products = [
+  { id: 1, name: "Product 1", image: "/img1.jpg" },
+  { id: 2, name: "Product 2", image: "/img2.jpg" },
+];
+
+const onSlideChange = ({ index, total }) => console.log(index, total);
+</script>
+```
+
 ### Vue 3 with TypeScript
 
 ```vue
 <template>
   <ParallaxCarousel
     ref="carouselRef"
-    :items="items"
-    :options="{ autoplay: true, interval: 3000 }"
+    :items="products"
+    :options="options"
     @change="onSlideChange"
   />
   <button @click="carouselRef?.next()">Next</button>
@@ -149,11 +262,32 @@ import { ref } from "vue";
 import {
   ParallaxCarouselVue as ParallaxCarousel,
   type ParallaxCarouselInstance,
+  type ParallaxCarouselOptions,
+  type RenderItemContext,
 } from "3d-whell-parallax-carousel/vue";
+
+interface Product {
+  id: number;
+  name: string;
+  image: string;
+}
 
 const carouselRef = ref<ParallaxCarouselInstance | null>(null);
 
-const items = ["<div>Card 1</div>", "<div>Card 2</div>"];
+const products: Product[] = [
+  { id: 1, name: "Product 1", image: "/img1.jpg" },
+  { id: 2, name: "Product 2", image: "/img2.jpg" },
+];
+
+const options: ParallaxCarouselOptions<Product> = {
+  autoplay: true,
+  renderItem: ({ item }: RenderItemContext<Product>) => `
+    <div style="padding: 20px;">
+      <img src="${item.image}" alt="${item.name}" />
+      <h3>${item.name}</h3>
+    </div>
+  `,
+};
 
 const onSlideChange = ({ index, total }: { index: number; total: number }) => {
   console.log(`Slide ${index} of ${total}`);
@@ -182,6 +316,7 @@ const onSlideChange = ({ index, total }: { index: number; total: number }) => {
 | `gridColor`    | string  | `'rgba(255,255,255,0.032)'`   | Grid line color              |
 | `gridSize`     | string  | `'38px'`                      | Grid cell size               |
 | `slots`        | object  | see below                     | Per-slot position config     |
+| `renderItem`   | function | `undefined`                  | Custom render function       |
 
 ### `slots` config
 
@@ -210,6 +345,34 @@ const options: ParallaxCarouselOptions = {
 | `origin` | CSS transform-origin                |
 | `z`      | z-index                             |
 | `op`     | opacity (0–1)                       |
+
+### `renderItem` callback
+
+Custom render function for each item. Receives a context object:
+
+```ts
+type RenderItem = (context: {
+  item: T;        // The item data
+  index: number;  // Item index
+  container: HTMLElement; // Card container element
+}) => HTMLElement | string;
+```
+
+**Example:**
+
+```ts
+const options: ParallaxCarouselOptions<Product> = {
+  renderItem: ({ item, index }) => {
+    return `
+      <div class="card">
+        <img src="${item.image}" alt="${item.name}" />
+        <h3>${item.name}</h3>
+        <p>Slide ${index}</p>
+      </div>
+    `;
+  },
+};
+```
 
 ---
 
@@ -316,6 +479,8 @@ npm run typecheck
 This library includes full TypeScript support with:
 
 - ✅ Complete type definitions for all exports
+- ✅ Generic type support for items (`<T>`)
+- ✅ Type-safe `renderItem` callback
 - ✅ Type-safe options and props
 - ✅ Typed event handlers
 - ✅ Proper ref types for React and Vue

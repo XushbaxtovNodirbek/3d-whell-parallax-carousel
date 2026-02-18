@@ -28,7 +28,7 @@ export const ParallaxCarouselVue = defineComponent({
   props: {
     /**
      * Array of items to display in the carousel
-     * Can be HTML strings, DOM elements, or objects with render() method
+     * Can be any type - use renderItem to customize rendering
      */
     items: {
       type: Array,
@@ -49,25 +49,8 @@ export const ParallaxCarouselVue = defineComponent({
     const containerRef = ref(null);
     let instance = null;
     const internalInstance = getCurrentInstance();
-
-    /**
-     * Resolve items to renderable content
-     */
-    const resolveItems = () => {
-      return props.items.map(item => {
-        if (typeof item === 'string') return item;
-        if (item instanceof HTMLElement) return item;
-        if (item && typeof item.render === 'function') return item.render();
-        // Handle Vue VNodes
-        if (item && typeof item === 'object' && item.__v_isVNode) {
-          const container = document.createElement('div');
-          // Vue 3 VNodes need to be mounted
-          // For simplicity, we convert to string representation
-          return `<div data-vue-component="true">${String(item.type || 'component')}</div>`;
-        }
-        return String(item);
-      });
-    };
+    const itemsRef = ref(props.items);
+    const optionsRef = ref(props.options);
 
     /**
      * Initialize the carousel
@@ -82,7 +65,7 @@ export const ParallaxCarouselVue = defineComponent({
 
       instance = new ParallaxCarousel(
         containerRef.value,
-        resolveItems(),
+        props.items,
         props.options
       );
 
@@ -110,6 +93,7 @@ export const ParallaxCarouselVue = defineComponent({
       () => props.options,
       (newOpts) => {
         if (instance) {
+          optionsRef.value = newOpts;
           instance.updateOptions(newOpts);
         }
       },
@@ -130,6 +114,7 @@ export const ParallaxCarouselVue = defineComponent({
           newItems.some((item, i) => item !== oldItems[i]);
 
         if (itemsChanged) {
+          itemsRef.value = newItems;
           // Destroy and recreate with new items
           instance.destroy();
           initCarousel();

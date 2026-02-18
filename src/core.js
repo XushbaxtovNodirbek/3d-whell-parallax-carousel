@@ -35,7 +35,20 @@ export const DEFAULT_OPTIONS = {
   gridSize: '38px',
 };
 
+/**
+ * @typedef {Object} RenderItemContext
+ * @property {any} item - The item data
+ * @property {number} index - Item index
+ * @property {HTMLElement} container - Card container element
+ */
+
 export class ParallaxCarousel {
+  /**
+   * @param {string|HTMLElement} container
+   * @param {any[]} items
+   * @param {Object} options
+   * @param {(ctx: RenderItemContext) => HTMLElement|string} [options.renderItem]
+   */
   constructor(container, items = [], options = {}) {
     this.container = typeof container === 'string'
       ? document.querySelector(container)
@@ -123,19 +136,44 @@ export class ParallaxCarousel {
         box-sizing: border-box;
       `;
 
-      // Render item — if string, use as innerHTML; if Element, append
-      if (typeof item === 'string') {
-        card.innerHTML = item;
-      } else if (item instanceof HTMLElement) {
-        card.appendChild(item);
-      } else if (item && item.render) {
-        card.appendChild(item.render());
-      }
+      // Render item using renderItem callback or default behavior
+      this._renderItem(card, item, i);
 
       wrap.appendChild(card);
       this._stage.appendChild(wrap);
       return { wrap, card };
     });
+  }
+
+  /**
+   * Render a single item
+   * @param {HTMLElement} container - Card container
+   * @param {any} item - Item data
+   * @param {number} index - Item index
+   */
+  _renderItem(container, item, index) {
+    const { renderItem } = this.options;
+
+    if (typeof renderItem === 'function') {
+      // Use custom renderItem callback
+      const result = renderItem({ item, index, container });
+      
+      if (result instanceof HTMLElement) {
+        container.appendChild(result);
+      } else if (typeof result === 'string') {
+        container.innerHTML = result;
+      }
+      return;
+    }
+
+    // Default behavior
+    if (typeof item === 'string') {
+      container.innerHTML = item;
+    } else if (item instanceof HTMLElement) {
+      container.appendChild(item);
+    } else if (item && typeof item.render === 'function') {
+      container.appendChild(item.render());
+    }
   }
 
   _bindEvents() {

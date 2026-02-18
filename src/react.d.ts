@@ -3,22 +3,24 @@
  */
 
 import * as React from 'react';
-import { ParallaxCarouselOptions, ChangeEventDetail, CarouselItem } from './index.js';
+import { ParallaxCarouselOptions, ChangeEventDetail, RenderItemContext } from './index.js';
 
 /**
  * Props for ParallaxCarouselReact component
+ *
+ * @typeParam T - Type of items in the carousel
  */
-export interface ParallaxCarouselReactProps {
+export interface ParallaxCarouselReactProps<T = any> {
   /**
    * Array of items to display in the carousel
-   * Can be HTML strings, React elements, DOM elements, or objects with render() method
+   * Can be any type - use renderItem to customize rendering
    */
-  items: CarouselItem[];
+  items: T[];
 
   /**
    * Carousel options
    */
-  options?: ParallaxCarouselOptions;
+  options?: ParallaxCarouselOptions<T>;
 
   /**
    * Change event handler
@@ -76,16 +78,33 @@ export interface ParallaxCarouselReactHandle {
  * ```tsx
  * import { ParallaxCarouselReact } from '3d-whell-parallax-carousel/react';
  *
+ * interface Product {
+ *   id: number;
+ *   name: string;
+ *   image: string;
+ * }
+ *
  * function App() {
  *   const carouselRef = useRef<ParallaxCarouselReactHandle>(null);
- *   const items = ['<div>Card 1</div>', '<div>Card 2</div>'];
+ *   const items: Product[] = [
+ *     { id: 1, name: 'Product 1', image: '/img1.jpg' },
+ *     { id: 2, name: 'Product 2', image: '/img2.jpg' },
+ *   ];
  *
  *   return (
  *     <>
- *       <ParallaxCarouselReact
+ *       <ParallaxCarouselReact<Product>
  *         ref={carouselRef}
  *         items={items}
- *         options={{ autoplay: true, interval: 3000 }}
+ *         options={{
+ *           autoplay: true,
+ *           renderItem: ({ item }) => `
+ *             <div>
+ *               <img src="${item.image}" alt="${item.name}" />
+ *               <h3>${item.name}</h3>
+ *             </div>
+ *           `,
+ *         }}
  *         onChange={({ index }) => console.log('Slide:', index)}
  *       />
  *       <button onClick={() => carouselRef.current?.next()}>Next</button>
@@ -94,9 +113,11 @@ export interface ParallaxCarouselReactHandle {
  * }
  * ```
  */
-declare const ParallaxCarouselReact: React.ForwardRefExoticComponent<
-  ParallaxCarouselReactProps & React.RefAttributes<ParallaxCarouselReactHandle>
->;
+declare const ParallaxCarouselReact: {
+  <T = any>(
+    props: ParallaxCarouselReactProps<T> & React.RefAttributes<ParallaxCarouselReactHandle>
+  ): React.ReactElement;
+};
 
 export default ParallaxCarouselReact;
 export { ParallaxCarouselReact };

@@ -3,22 +3,24 @@
  */
 
 import { DefineComponent, Ref, ComponentPublicInstance } from 'vue';
-import { ParallaxCarouselOptions, ChangeEventDetail, CarouselItem } from './index.js';
+import { ParallaxCarouselOptions, ChangeEventDetail, RenderItemContext } from './index.js';
 
 /**
  * Props for ParallaxCarouselVue component
+ *
+ * @typeParam T - Type of items in the carousel
  */
-export interface ParallaxCarouselVueProps {
+export interface ParallaxCarouselVueProps<T = any> {
   /**
    * Array of items to display in the carousel
-   * Can be HTML strings, DOM elements, or objects with render() method
+   * Can be any type - use renderItem to customize rendering
    */
-  items: CarouselItem[];
+  items: T[];
 
   /**
    * Carousel options
    */
-  options?: ParallaxCarouselOptions;
+  options?: ParallaxCarouselOptions<T>;
 }
 
 /**
@@ -81,34 +83,46 @@ export interface ParallaxCarouselVueExposed {
  * ```vue
  * <template>
  *   <ParallaxCarousel
- *     ref="carousel"
+ *     ref="carouselRef"
  *     :items="items"
- *     :options="{ autoplay: true, interval: 3000 }"
+ *     :options="{
+ *       autoplay: true,
+ *       renderItem: ({ item }) => `<div>${item.name}</div>`,
+ *     }"
  *     @change="onSlideChange"
  *   />
- *   <button @click="$refs.carousel.next()">Next</button>
  * </template>
  *
  * <script setup lang="ts">
+ * import { ref } from 'vue';
  * import { ParallaxCarouselVue } from '3d-whell-parallax-carousel/vue';
- * import type { ParallaxCarouselVueExposed } from '3d-whell-parallax-carousel/vue';
  *
- * const carousel = ref<ParallaxCarouselVueExposed | null>(null);
- * const items = ['<div>Card 1</div>', '<div>Card 2</div>'];
+ * interface Product {
+ *   id: number;
+ *   name: string;
+ * }
+ *
+ * const carouselRef = ref<ParallaxCarouselInstance | null>(null);
+ * const items: Product[] = [
+ *   { id: 1, name: 'Product 1' },
+ *   { id: 2, name: 'Product 2' },
+ * ];
  * const onSlideChange = ({ index, total }) => console.log(index, total);
  * </script>
  * ```
  */
-declare const ParallaxCarouselVue: DefineComponent<
-  ParallaxCarouselVueProps,
-  {},
-  {},
-  {},
-  {},
-  {},
-  {},
-  ParallaxCarouselVueEmits
->;
+declare const ParallaxCarouselVue: {
+  new <T = any>(): DefineComponent<
+    ParallaxCarouselVueProps<T>,
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    ParallaxCarouselVueEmits
+  >;
+};
 
 export default ParallaxCarouselVue;
 export { ParallaxCarouselVue };

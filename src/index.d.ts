@@ -24,9 +24,21 @@ export interface SlotConfig {
 }
 
 /**
+ * Context object passed to renderItem callback
+ */
+export interface RenderItemContext<T = any> {
+  /** The item data */
+  item: T;
+  /** Item index */
+  index: number;
+  /** Card container element */
+  container: HTMLElement;
+}
+
+/**
  * Carousel options interface
  */
-export interface ParallaxCarouselOptions {
+export interface ParallaxCarouselOptions<T = any> {
   /**
    * Per-slot position configuration (-2 to +2)
    * @default See DEFAULT_OPTIONS
@@ -116,6 +128,13 @@ export interface ParallaxCarouselOptions {
    * @default '38px'
    */
   gridSize?: string;
+
+  /**
+   * Custom render function for items
+   * @param context - Render context with item, index, and container
+   * @returns HTMLElement or HTML string
+   */
+  renderItem?: (context: RenderItemContext<T>) => HTMLElement | string;
 }
 
 /**
@@ -127,11 +146,6 @@ export interface ChangeEventDetail {
   /** Total number of items */
   total: number;
 }
-
-/**
- * Carousel item type
- */
-export type CarouselItem = string | HTMLElement | { render(): HTMLElement };
 
 /**
  * Default options object
@@ -157,8 +171,10 @@ export declare const DEFAULT_OPTIONS: Readonly<{
 /**
  * ParallaxCarousel class
  * Main carousel implementation (framework-free)
+ *
+ * @typeParam T - Type of items in the carousel
  */
-export declare class ParallaxCarousel {
+export declare class ParallaxCarousel<T = any> {
   /** Current slide index */
   current: number;
 
@@ -166,7 +182,7 @@ export declare class ParallaxCarousel {
   total: number;
 
   /** Carousel options */
-  options: ParallaxCarouselOptions;
+  options: ParallaxCarouselOptions<T>;
 
   /** Whether animation is in progress */
   isAnimating: boolean;
@@ -180,8 +196,8 @@ export declare class ParallaxCarousel {
    */
   constructor(
     container: string | HTMLElement,
-    items: CarouselItem[],
-    options?: ParallaxCarouselOptions
+    items: T[],
+    options?: ParallaxCarouselOptions<T>
   );
 
   /**
@@ -204,7 +220,7 @@ export declare class ParallaxCarousel {
    * Update carousel options at runtime
    * @param newOptions - Options to merge with current
    */
-  updateOptions(newOptions: ParallaxCarouselOptions): void;
+  updateOptions(newOptions: ParallaxCarouselOptions<T>): void;
 
   /**
    * Destroy carousel instance and clean up

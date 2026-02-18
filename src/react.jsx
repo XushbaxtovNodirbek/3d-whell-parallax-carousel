@@ -2,40 +2,6 @@ import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react
 import { ParallaxCarousel } from './core.js';
 
 /**
- * Helper to convert React element to HTML string
- * Uses a temporary DOM container for rendering
- */
-function renderReactElementToHtml(element) {
-  if (typeof element === 'string') return element;
-  if (!React.isValidElement(element)) return String(element);
-
-  const container = document.createElement('div');
-  
-  // Try React 18+ createRoot first, fallback to ReactDOM.render
-  try {
-    const ReactDOM = window.ReactDOM;
-    if (ReactDOM && ReactDOM.createRoot) {
-      const root = ReactDOM.createRoot(container);
-      root.render(element);
-      // For SSR or immediate HTML, we need to get the rendered output
-      // This is a limitation - React elements need to be rendered
-      // For best results, pass HTML strings or DOM elements directly
-    } else if (ReactDOM) {
-      ReactDOM.render(element, container);
-    }
-  } catch (e) {
-    // React not available in this context
-  }
-  
-  // Return innerHTML if rendered, otherwise use a data attribute approach
-  if (container.innerHTML) return container.innerHTML;
-  
-  // Fallback: render to a string-like representation
-  // Users should pass HTML strings or DOM elements for best results
-  return element.type ? `<div data-react-component="${element.type}"></div>` : String(element);
-}
-
-/**
  * React wrapper for ParallaxCarousel
  *
  * @example
@@ -54,45 +20,23 @@ const ParallaxCarouselReact = forwardRef(function ParallaxCarouselReact(
   const containerRef = useRef(null);
   const instanceRef = useRef(null);
   const itemsRef = useRef(items);
+  const optionsRef = useRef(options);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Store current items
+    // Store current items and options
     itemsRef.current = items;
+    optionsRef.current = options;
 
     // Clean up previous instance
     if (instanceRef.current) {
       instanceRef.current.destroy();
     }
 
-    // Resolve items to HTML
-    const resolvedItems = items.map(item => {
-      if (typeof item === 'string') return item;
-      if (item instanceof HTMLElement) return item;
-      if (item && typeof item.render === 'function') return item.render();
-      if (React.isValidElement(item)) {
-        // For React elements, create a container and mount
-        const tempContainer = document.createElement('div');
-        try {
-          const ReactDOM = window.ReactDOM;
-          if (ReactDOM?.createRoot) {
-            const root = ReactDOM.createRoot(tempContainer);
-            root.render(item);
-          } else if (ReactDOM) {
-            ReactDOM.render(item, tempContainer);
-          }
-        } catch (e) {
-          // Ignore React rendering errors
-        }
-        if (tempContainer.innerHTML) return tempContainer.innerHTML;
-      }
-      return String(item);
-    });
-
     instanceRef.current = new ParallaxCarousel(
       containerRef.current,
-      resolvedItems,
+      items,
       options
     );
 
@@ -123,17 +67,10 @@ const ParallaxCarouselReact = forwardRef(function ParallaxCarouselReact(
       // Destroy and recreate
       instanceRef.current.destroy();
       
-      const resolvedItems = items.map(item => {
-        if (typeof item === 'string') return item;
-        if (item instanceof HTMLElement) return item;
-        if (item && typeof item.render === 'function') return item.render();
-        return String(item);
-      });
-
       instanceRef.current = new ParallaxCarousel(
         containerRef.current,
-        resolvedItems,
-        instanceRef.current.options
+        items,
+        optionsRef.current
       );
 
       // Re-attach change listener
@@ -146,6 +83,7 @@ const ParallaxCarouselReact = forwardRef(function ParallaxCarouselReact(
   // Update options when they change
   useEffect(() => {
     if (instanceRef.current) {
+      optionsRef.current = options;
       instanceRef.current.updateOptions(options);
     }
   }, [options]);
