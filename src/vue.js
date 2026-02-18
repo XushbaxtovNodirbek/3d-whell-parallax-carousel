@@ -51,6 +51,7 @@ export const ParallaxCarouselVue = defineComponent({
     const internalInstance = getCurrentInstance();
     const itemsRef = ref(props.items);
     const optionsRef = ref(props.options);
+    const renderedItemsRef = ref(new Map());
 
     /**
      * Initialize the carousel
@@ -73,6 +74,9 @@ export const ParallaxCarouselVue = defineComponent({
       containerRef.value.addEventListener('change', (e) => {
         emit('change', e.detail);
       });
+
+      // Force re-render to show items
+      renderedItemsRef.value = new Map();
     };
 
     onMounted(() => {

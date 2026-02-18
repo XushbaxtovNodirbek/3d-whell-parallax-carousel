@@ -6,6 +6,11 @@ import * as React from 'react';
 import { ParallaxCarouselOptions, ChangeEventDetail, RenderItemContext } from './index.js';
 
 /**
+ * Render function return type for React - supports ReactNode
+ */
+export type ReactRenderItemResult = React.ReactNode | HTMLElement | string;
+
+/**
  * Props for ParallaxCarouselReact component
  *
  * @typeParam T - Type of items in the carousel
@@ -20,7 +25,15 @@ export interface ParallaxCarouselReactProps<T = any> {
   /**
    * Carousel options
    */
-  options?: ParallaxCarouselOptions<T>;
+  options?: ParallaxCarouselOptions<T> & {
+    /**
+     * Custom render function for items (React-specific)
+     * Can return ReactNode, HTMLElement, or string
+     * @param context - Render context with item, index, and container
+     * @returns ReactNode or render result
+     */
+    renderItem?: (context: RenderItemContext<T>) => ReactRenderItemResult;
+  };
 
   /**
    * Change event handler
@@ -98,12 +111,12 @@ export interface ParallaxCarouselReactHandle {
  *         items={items}
  *         options={{
  *           autoplay: true,
- *           renderItem: ({ item }) => `
+ *           renderItem: ({ item }) => (
  *             <div>
- *               <img src="${item.image}" alt="${item.name}" />
- *               <h3>${item.name}</h3>
+ *               <img src={item.image} alt={item.name} />
+ *               <h3>{item.name}</h3>
  *             </div>
- *           `,
+ *           ),
  *         }}
  *         onChange={({ index }) => console.log('Slide:', index)}
  *       />

@@ -47,7 +47,7 @@ export class ParallaxCarousel {
    * @param {string|HTMLElement} container
    * @param {any[]} items
    * @param {Object} options
-   * @param {(ctx: RenderItemContext) => HTMLElement|string} [options.renderItem]
+   * @param {(ctx: RenderItemContext) => HTMLElement|string|React.ReactNode|import('vue').VNode} [options.renderItem]
    */
   constructor(container, items = [], options = {}) {
     this.container = typeof container === 'string'
@@ -63,6 +63,7 @@ export class ParallaxCarousel {
     this.isAnimating = false;
     this._autoTimer  = null;
     this._cardEls    = [];
+    this._renderedItems = new Map(); // Store rendered React/Vue nodes
 
     this._init();
   }
@@ -162,6 +163,10 @@ export class ParallaxCarousel {
         container.appendChild(result);
       } else if (typeof result === 'string') {
         container.innerHTML = result;
+      }
+      // For ReactNode/VNode, store for framework wrapper to handle
+      else {
+        this._renderedItems.set(index, result);
       }
       return;
     }
@@ -331,6 +336,7 @@ export class ParallaxCarousel {
 
   updateOptions(newOptions) {
     this.options = this._mergeOptions(this.options, newOptions);
+    this._renderedItems.clear();
     this._render(false);
     if (this.options.autoplay) this._startAuto();
     else this._stopAuto();
@@ -338,7 +344,24 @@ export class ParallaxCarousel {
 
   destroy() {
     this._stopAuto();
+    this._renderedItems.clear();
     document.removeEventListener('keydown', this._onKeydown);
     this.container.innerHTML = '';
+  }
+
+  /**
+   * Get rendered item at index (for React/Vue wrappers)
+   * @param {number} index - Item index
+   * @returns {any} Rendered ReactNode or VNode
+   */
+  getRenderedItem(index) {
+    return this._renderedItems.get(index);
+  }
+
+  /**
+   * Clear rendered items cache
+   */
+  clearRenderedItems() {
+    this._renderedItems.clear();
   }
 }

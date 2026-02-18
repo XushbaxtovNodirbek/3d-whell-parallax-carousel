@@ -2,8 +2,13 @@
  * Vue 3 wrapper for 3d-whell-parallax-carousel
  */
 
-import { DefineComponent, Ref, ComponentPublicInstance } from 'vue';
+import { DefineComponent, Ref, ComponentPublicInstance, VNode } from 'vue';
 import { ParallaxCarouselOptions, ChangeEventDetail, RenderItemContext } from './index.js';
+
+/**
+ * Render function return type for Vue - supports VNode
+ */
+export type VueRenderItemResult = VNode | HTMLElement | string;
 
 /**
  * Props for ParallaxCarouselVue component
@@ -20,7 +25,15 @@ export interface ParallaxCarouselVueProps<T = any> {
   /**
    * Carousel options
    */
-  options?: ParallaxCarouselOptions<T>;
+  options?: ParallaxCarouselOptions<T> & {
+    /**
+     * Custom render function for items (Vue-specific)
+     * Can return VNode, HTMLElement, or string
+     * @param context - Render context with item, index, and container
+     * @returns VNode or render result
+     */
+    renderItem?: (context: RenderItemContext<T>) => VueRenderItemResult;
+  };
 }
 
 /**
@@ -87,14 +100,14 @@ export interface ParallaxCarouselVueExposed {
  *     :items="items"
  *     :options="{
  *       autoplay: true,
- *       renderItem: ({ item }) => `<div>${item.name}</div>`,
+ *       renderItem: ({ item }) => h('div', item.name),
  *     }"
  *     @change="onSlideChange"
  *   />
  * </template>
  *
  * <script setup lang="ts">
- * import { ref } from 'vue';
+ * import { ref, h } from 'vue';
  * import { ParallaxCarouselVue } from '3d-whell-parallax-carousel/vue';
  *
  * interface Product {

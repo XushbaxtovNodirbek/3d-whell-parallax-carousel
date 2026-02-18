@@ -36,6 +36,11 @@ export interface RenderItemContext<T = any> {
 }
 
 /**
+ * Render function return type - supports string, HTMLElement, ReactNode, or Vue VNode
+ */
+export type RenderItemResult = HTMLElement | string | any;
+
+/**
  * Carousel options interface
  */
 export interface ParallaxCarouselOptions<T = any> {
@@ -131,10 +136,11 @@ export interface ParallaxCarouselOptions<T = any> {
 
   /**
    * Custom render function for items
+   * Can return HTMLElement, string, ReactNode, or Vue VNode
    * @param context - Render context with item, index, and container
-   * @returns HTMLElement or HTML string
+   * @returns Render result
    */
-  renderItem?: (context: RenderItemContext<T>) => HTMLElement | string;
+  renderItem?: (context: RenderItemContext<T>) => RenderItemResult;
 }
 
 /**
@@ -226,6 +232,18 @@ export declare class ParallaxCarousel<T = any> {
    * Destroy carousel instance and clean up
    */
   destroy(): void;
+
+  /**
+   * Get rendered item at index (for React/Vue wrappers)
+   * @param index - Item index
+   * @returns Rendered ReactNode or VNode
+   */
+  getRenderedItem(index: number): any;
+
+  /**
+   * Clear rendered items cache
+   */
+  clearRenderedItems(): void;
 }
 
 // Export as default
