@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parallax Carousel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0e0e0e;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.032) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.032) 1px, transparent 1px);
+    background-size: 38px 38px;
+    pointer-events: none;
+  }
+
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 420px;
+  }
+
+  /* Each card-wrap holds position absolutely centered */
+  .card-wrap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    /* transitions on individual properties for smooth animation */
+    transition:
+      width  0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      height 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      margin 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+      z-index 0s;
+    pointer-events: none;
+  }
+
+  .card-wrap.visible { pointer-events: auto; cursor: pointer; }
+  .card-wrap.hidden  { opacity: 0; pointer-events: none; }
+
+  .card {
+    background: #111;
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.08);
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -3px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1),
+                transform-origin 0s;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 55%);
+  }
+
+  .nav {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 100;
+  }
+
+  .nav button {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.45);
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .nav button:hover {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.9);
+    border-color: rgba(255,255,255,0.25);
+  }
+
+  .dots { display: flex; gap: 7px; align-items: center; }
+  .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .dot.active {
+    background: rgba(255,255,255,0.85);
+    width: 18px;
+    border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage"></div>
+
+<div class="nav">
+  <button id="prev">&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <button id="next">&#8594;</button>
+</div>
+
+<script>
+  const TOTAL = 8;
+  let current = 0;
+  let isAnimating = false;
+
+  // Visual config per slot position (-2 to +2)
+  // kichik tomon markaz tomonda: chap kartalar right-origin, o'ng kartalar left-origin
+  const SLOT = {
+    '-2': { x: -490, w: 220, h: 330, ry:  50, origin: 'right center',  z: 1, op: 1 },
+    '-1': { x: -255, w: 192, h: 295, ry:  26, origin: 'right center',  z: 2, op: 1 },
+     '0': { x:    0, w: 188, h: 275, ry:   0, origin: 'center center', z: 3, op: 1 },
+     '1': { x:  255, w: 192, h: 295, ry: -26, origin: 'left center',   z: 2, op: 1 },
+     '2': { x:  490, w: 220, h: 330, ry: -50, origin: 'left center',   z: 1, op: 1 },
+  };
+
+  // Off-screen configs for entering/leaving cards
+  const OFF_LEFT  = { x: -700, w: 168, h: 255, ry:  50, origin: 'right center',  z: 0, op: 0 };
+  const OFF_RIGHT = { x:  700, w: 168, h: 255, ry: -50, origin: 'left center',   z: 0, op: 0 };
+
+  const stage = document.getElementById('stage');
+  const dotsEl = document.getElementById('dots');
+
+  // Create all card DOM elements once
+  const cardEls = [];
+  for (let i = 0; i < TOTAL; i++) {
+    const wrap = document.createElement('div');
+    wrap.className = 'card-wrap hidden';
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.textContent = String(i + 1).padStart(2, '0');
+    wrap.appendChild(card);
+    stage.appendChild(wrap);
+    cardEls.push({ wrap, card });
+
+    // dots
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  }
+
+  function applySlot(cardIndex, slotCfg) {
+    const { wrap, card } = cardEls[cardIndex];
+    const { x, w, h, ry, origin, z, op } = slotCfg;
+
+    wrap.style.width      = w + 'px';
+    wrap.style.height     = h + 'px';
+    wrap.style.marginLeft = (-w / 2) + 'px';
+    wrap.style.marginTop  = (-h / 2) + 'px';
+    wrap.style.transform  = `translateX(${x}px)`;
+    wrap.style.zIndex     = z;
+    wrap.style.opacity    = op;
+
+    card.style.transformOrigin = origin;
+    card.style.transform = `perspective(900px) rotateY(${ry}deg)`;
+  }
+
+  function getIdx(offset) {
+    return ((current + offset) % TOTAL + TOTAL) % TOTAL;
+  }
+
+  function render(animate = true) {
+    // Disable transitions if needed
+    cardEls.forEach(({ wrap, card }) => {
+      wrap.style.transition  = animate
+        ? 'width 0.65s cubic-bezier(0.4,0,0.2,1), height 0.65s cubic-bezier(0.4,0,0.2,1), margin 0.65s cubic-bezier(0.4,0,0.2,1), transform 0.65s cubic-bezier(0.4,0,0.2,1), opacity 0.65s cubic-bezier(0.4,0,0.2,1)'
+        : 'none';
+      card.style.transition  = animate
+        ? 'transform 0.65s cubic-bezier(0.4,0,0.2,1)'
+        : 'none';
+    });
+
+    // First hide all
+    for (let i = 0; i < TOTAL; i++) {
+      cardEls[i].wrap.classList.remove('visible');
+      cardEls[i].wrap.classList.add('hidden');
+    }
+
+    // Show visible 5
+    for (let pos = -2; pos <= 2; pos++) {
+      const idx = getIdx(pos);
+      const { wrap } = cardEls[idx];
+      wrap.classList.remove('hidden');
+      wrap.classList.add('visible');
+      applySlot(idx, SLOT[String(pos)]);
+
+      // click handler: remove old, add new
+      wrap.onclick = null;
+      if (pos < 0) wrap.onclick = () => { if (!isAnimating) { prev(); resetAuto(); } };
+      else if (pos > 0) wrap.onclick = () => { if (!isAnimating) { next(); resetAuto(); } };
+      else wrap.style.cursor = 'default';
+    }
+
+    // Update dots
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  function next() {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    // The card that will leave at pos -2 side: needs to animate off-screen left
+    const leavingIdx = getIdx(-2);
+    applySlot(leavingIdx, OFF_LEFT);
+
+    // The card that will enter at pos +2 side: position it off-screen right instantly, then animate in
+    const enteringIdx = getIdx(3); // next current+3
+    const { wrap: eWrap, card: eCard } = cardEls[enteringIdx];
+    // place instantly off-screen right (no transition)
+    eWrap.style.transition = 'none';
+    eCard.style.transition = 'none';
+    eWrap.classList.remove('hidden');
+    eWrap.classList.add('visible');
+    applySlot(enteringIdx, OFF_RIGHT);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      current = (current + 1) % TOTAL;
+      render(true);
+      setTimeout(() => { isAnimating = false; }, 680);
+    }));
+  }
+
+  function prev() {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const leavingIdx = getIdx(2);
+    applySlot(leavingIdx, OFF_RIGHT);
+
+    const enteringIdx = getIdx(-3);
+    const { wrap: eWrap, card: eCard } = cardEls[enteringIdx];
+    eWrap.style.transition = 'none';
+    eCard.style.transition = 'none';
+    eWrap.classList.remove('hidden');
+    eWrap.classList.add('visible');
+    applySlot(enteringIdx, OFF_LEFT);
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      current = (current - 1 + TOTAL) % TOTAL;
+      render(true);
+      setTimeout(() => { isAnimating = false; }, 680);
+    }));
+  }
+
+  function goTo(i) {
+    if (i === current || isAnimating) return;
+    current = i;
+    render(true);
+  }
+
+  // Initial render without animation
+  render(false);
+  // Force reflow then enable
+  requestAnimationFrame(() => render(true));
+
+  let autoTimer = setInterval(next, 2800);
+  function resetAuto() {
+    clearInterval(autoTimer);
+    autoTimer = setInterval(next, 2800);
+  }
+
+  document.getElementById('next').addEventListener('click', () => { next(); resetAuto(); });
+  document.getElementById('prev').addEventListener('click', () => { prev(); resetAuto(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { next(); resetAuto(); }
+    if (e.key === 'ArrowLeft')  { prev(); resetAuto(); }
+  });
+
+  let startX = 0;
+  document.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) { dx < 0 ? next() : prev(); resetAuto(); }
+  });
+</script>
+</body>
+</html>

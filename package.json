@@ -1,6 +1,6 @@
 {
-  "name": "3d-whell-3d-whell-parallax-carousel",
-  "version": "1.0.0",
+  "name": "3d-whell-parallax-carousel",
+  "version": "1.0.2",
   "description": "Smooth 3D parallax carousel with trapezoid perspective effect. Works with Vanilla JS, React, and Vue.",
   "keywords": [
     "carousel",
@@ -9,42 +9,54 @@
     "slider",
     "react",
     "vue",
-    "vanilla"
+    "vanilla",
+    "typescript",
+    "3d-carousel",
+    "parallax-slider"
   ],
   "author": "Nodirbek Xushbaxtov",
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
+  "types": "./src/index.d.ts",
   "exports": {
     ".": {
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "require": "./dist/index.cjs",
+      "types": "./src/index.d.ts"
     },
     "./react": {
       "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "require": "./dist/react.cjs",
+      "types": "./src/react.d.ts"
     },
     "./vue": {
       "import": "./dist/vue.js",
-      "require": "./dist/vue.cjs"
+      "require": "./dist/vue.cjs",
+      "types": "./src/vue.d.ts"
     }
   },
   "files": [
     "dist",
     "src",
-    "README.md"
+    "README.md",
+    "tsconfig.json"
   ],
   "scripts": {
     "build": "rollup -c",
-    "dev": "rollup -c --watch"
+    "dev": "rollup -c --watch",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@babel/preset-react": "^7.0.0",
     "@rollup/plugin-babel": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
     "rollup": "^4.0.0",
-    "rollup-plugin-peer-deps-external": "^2.2.4"
+    "rollup-plugin-peer-deps-external": "^2.2.4",
+    "typescript": "^5.9.3"
   },
   "peerDependencies": {
     "react": ">=17.0.0",
@@ -61,5 +73,13 @@
     "vue": {
       "optional": true
     }
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nodirbek/3d-whell-parallax-carousel"
+  },
+  "bugs": {
+    "url": "https://github.com/nodirbek/3d-whell-parallax-carousel/issues"
+  },
+  "homepage": "https://github.com/nodirbek/3d-whell-parallax-carousel#readme"
 }

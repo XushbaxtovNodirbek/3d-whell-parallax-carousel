@@ -19,8 +19,8 @@ export default [
     external,
     plugins: basePlugins,
     output: [
-      { file: "dist/index.js", format: "es" },
-      { file: "dist/index.cjs", format: "cjs" },
+      { file: "dist/index.js", format: "es", sourcemap: true },
+      { file: "dist/index.cjs", format: "cjs", sourcemap: true },
     ],
   },
   // React wrapper (babel for JSX)
@@ -29,8 +29,8 @@ export default [
     external,
     plugins: [...basePlugins, babelPlugin],
     output: [
-      { file: "dist/react.js", format: "es" },
-      { file: "dist/react.cjs", format: "cjs" },
+      { file: "dist/react.js", format: "es", sourcemap: true, exports: "named" },
+      { file: "dist/react.cjs", format: "cjs", sourcemap: true, exports: "named" },
     ],
   },
   // Vue wrapper
@@ -39,8 +39,8 @@ export default [
     external,
     plugins: basePlugins,
     output: [
-      { file: "dist/vue.js", format: "es" },
-      { file: "dist/vue.cjs", format: "cjs" },
+      { file: "dist/vue.js", format: "es", sourcemap: true, exports: "named" },
+      { file: "dist/vue.cjs", format: "cjs", sourcemap: true, exports: "named" },
     ],
   },
 ];

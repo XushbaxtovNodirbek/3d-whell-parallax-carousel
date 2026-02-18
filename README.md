@@ -1,6 +1,6 @@
 # 3d-whell-parallax-carousel
 
-Smooth 3D parallax carousel with trapezoid perspective effect. Shows 5 cards at once — center card flat, side cards angled like a fan. Works with **Vanilla JS**, **React**, and **Vue 3**.
+Smooth 3D parallax carousel with trapezoid perspective effect. Shows 5 cards at once — center card flat, side cards angled like a fan. Works with **Vanilla JS**, **React**, **Vue 3**, and **TypeScript**.
 
 ## Install
 
@@ -24,6 +24,29 @@ const carousel = new ParallaxCarousel("#my-container", [
   '<div style="color:white">Card 4</div>',
   '<div style="color:white">Card 5</div>',
 ]);
+```
+
+### TypeScript
+
+```ts
+import { ParallaxCarousel, type ParallaxCarouselOptions } from "3d-whell-parallax-carousel";
+
+const options: ParallaxCarouselOptions = {
+  autoplay: true,
+  interval: 3000,
+  background: "#222",
+};
+
+const carousel = new ParallaxCarousel("#my-container", [
+  '<div>Card 1</div>',
+  '<div>Card 2</div>',
+], options);
+
+// Type-safe event handling
+carousel.container.addEventListener("change", (e: CustomEvent) => {
+  const { index, total } = e.detail;
+  console.log(`Slide ${index} of ${total}`);
+});
 ```
 
 ### React
@@ -50,6 +73,43 @@ function App() {
 }
 ```
 
+### React with TypeScript
+
+```tsx
+import { useRef } from "react";
+import {
+  ParallaxCarouselReact,
+  type ParallaxCarouselReactHandle,
+  type ParallaxCarouselReactProps,
+} from "3d-whell-parallax-carousel/react";
+
+const items: ParallaxCarouselReactProps["items"] = [
+  "<div>Card 1</div>",
+  "<div>Card 2</div>",
+];
+
+function App() {
+  const carouselRef = useRef<ParallaxCarouselReactHandle>(null);
+
+  const handleChange: ParallaxCarouselReactProps["onChange"] = ({ index, total }) => {
+    console.log(`Slide ${index} of ${total}`);
+  };
+
+  return (
+    <>
+      <ParallaxCarouselReact
+        ref={carouselRef}
+        items={items}
+        options={{ autoplay: true, interval: 3000 }}
+        onChange={handleChange}
+      />
+      <button onClick={() => carouselRef.current?.next()}>Next</button>
+      <button onClick={() => carouselRef.current?.prev()}>Prev</button>
+    </>
+  );
+}
+```
+
 ### Vue 3
 
 ```vue
@@ -68,6 +128,36 @@ import { ParallaxCarouselVue as ParallaxCarousel } from "3d-whell-parallax-carou
 
 const items = ["<div>Card 1</div>", "<div>Card 2</div>", "<div>Card 3</div>"];
 const onSlideChange = ({ index, total }) => console.log(index, total);
+</script>
+```
+
+### Vue 3 with TypeScript
+
+```vue
+<template>
+  <ParallaxCarousel
+    ref="carouselRef"
+    :items="items"
+    :options="{ autoplay: true, interval: 3000 }"
+    @change="onSlideChange"
+  />
+  <button @click="carouselRef?.next()">Next</button>
+</template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+import {
+  ParallaxCarouselVue as ParallaxCarousel,
+  type ParallaxCarouselInstance,
+} from "3d-whell-parallax-carousel/vue";
+
+const carouselRef = ref<ParallaxCarouselInstance | null>(null);
+
+const items = ["<div>Card 1</div>", "<div>Card 2</div>"];
+
+const onSlideChange = ({ index, total }: { index: number; total: number }) => {
+  console.log(`Slide ${index} of ${total}`);
+};
 </script>
 ```
 
@@ -97,14 +187,18 @@ const onSlideChange = ({ index, total }) => console.log(index, total);
 
 Customize each of the 5 visible positions (`-2` to `+2`):
 
-```js
-slots: {
-  '-2': { x: -490, w: 220, h: 330, ry:  50, origin: 'right center',  z: 1, op: 1 },
-  '-1': { x: -255, w: 192, h: 295, ry:  26, origin: 'right center',  z: 2, op: 1 },
-   '0': { x:    0, w: 188, h: 275, ry:   0, origin: 'center center', z: 3, op: 1 },
-   '1': { x:  255, w: 192, h: 295, ry: -26, origin: 'left center',   z: 2, op: 1 },
-   '2': { x:  490, w: 220, h: 330, ry: -50, origin: 'left center',   z: 1, op: 1 },
-}
+```ts
+import type { ParallaxCarouselOptions } from "3d-whell-parallax-carousel";
+
+const options: ParallaxCarouselOptions = {
+  slots: {
+    '-2': { x: -490, w: 220, h: 330, ry:  50, origin: 'right center',  z: 1, op: 1 },
+    '-1': { x: -255, w: 192, h: 295, ry:  26, origin: 'right center',  z: 2, op: 1 },
+     '0': { x:    0, w: 188, h: 275, ry:   0, origin: 'center center', z: 3, op: 1 },
+     '1': { x:  255, w: 192, h: 295, ry: -26, origin: 'left center',   z: 2, op: 1 },
+     '2': { x:  490, w: 220, h: 330, ry: -50, origin: 'left center',   z: 1, op: 1 },
+  },
+};
 ```
 
 | Field    | Description                         |
@@ -121,6 +215,8 @@ slots: {
 
 ## API
 
+### Vanilla JS / Core
+
 ```js
 carousel.next(); // Go to next slide
 carousel.prev(); // Go to previous slide
@@ -133,13 +229,63 @@ carousel.updateOptions({
 carousel.destroy(); // Clean up and remove from DOM
 ```
 
+### React Ref Methods
+
+```tsx
+const ref = useRef<ParallaxCarouselReactHandle>(null);
+
+// Access methods via ref.current
+ref.current?.next();
+ref.current?.prev();
+ref.current?.goTo(2);
+ref.current?.updateOptions({ interval: 5000 });
+ref.current?.destroy();
+```
+
+### Vue Ref Methods
+
+```vue
+<script setup lang="ts">
+const carouselRef = ref<ParallaxCarouselInstance | null>(null);
+
+// Access methods via carouselRef.value
+carouselRef.value?.next();
+carouselRef.value?.prev();
+carouselRef.value?.goTo(2);
+carouselRef.value?.updateOptions({ interval: 5000 });
+carouselRef.value?.destroy();
+</script>
+```
+
 ## Events
+
+### Vanilla JS
 
 ```js
 container.addEventListener("change", (e) => {
   console.log(e.detail.index); // current index
   console.log(e.detail.total); // total items
 });
+```
+
+### React
+
+```tsx
+<ParallaxCarouselReact
+  items={items}
+  onChange={({ index, total }) => {
+    console.log(`Slide ${index} of ${total}`);
+  }}
+/>
+```
+
+### Vue
+
+```vue
+<ParallaxCarousel
+  :items="items"
+  @change="({ index, total }) => console.log(`Slide ${index} of ${total}`)"
+/>
 ```
 
 ---
@@ -152,6 +298,28 @@ npm run build
 ```
 
 Output goes to `dist/`.
+
+### Development
+
+```bash
+# Watch mode
+npm run dev
+
+# Type check
+npm run typecheck
+```
+
+---
+
+## TypeScript Support
+
+This library includes full TypeScript support with:
+
+- ✅ Complete type definitions for all exports
+- ✅ Type-safe options and props
+- ✅ Typed event handlers
+- ✅ Proper ref types for React and Vue
+- ✅ tsconfig.json included
 
 ---
 
