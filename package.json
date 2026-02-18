@@ -1,6 +1,6 @@
 {
   "name": "3d-whell-parallax-carousel",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Smooth 3D parallax carousel with trapezoid perspective effect. Works with Vanilla JS, React, and Vue.",
   "keywords": [
     "carousel",

@@ -10,6 +10,13 @@ npm install 3d-whell-parallax-carousel
 
 ---
 
+## Live Demo
+
+- **React + TypeScript Example**: https://lqnjk3.csb.app/
+- **Source Code**: [`example/app.tsx`](./example/app.tsx)
+
+---
+
 ## Usage
 
 ### Vanilla JS
